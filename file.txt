@@ -1,0 +1,9 @@
+a=5
+b=5
+#ass n tiddies
+if a==b then
+c=69
+d=420
+fi
+dump
+quit
