@@ -4,7 +4,7 @@
 /* variable declaration */
 Symbol_table table;
 char lexeme[100];
-char nextChar, peek;
+char nextChar;
 int lexLen;
 int num = -1;
 string input;
@@ -52,7 +52,7 @@ int lookup(char ch, char next)
       if (next == '=')
       {
          nextToken = EQ_OP;
-         num++;
+         getChar();
          addChar();
       }
       else
@@ -63,7 +63,7 @@ int lookup(char ch, char next)
       if (next == '=')
       {
          nextToken = GREATEQ_OP;
-         num++;
+         getChar();
          addChar();
       }
       else
@@ -74,7 +74,7 @@ int lookup(char ch, char next)
       if (next == '=')
       {
          nextToken = LESSEQ_OP;
-         num++;
+         getChar();
          addChar();
       }
       else
@@ -85,7 +85,7 @@ int lookup(char ch, char next)
       if (next == '=')
       {
          nextToken = NOTEQ_OP;
-         num++;
+         getChar();
          addChar();
       }
       else
@@ -121,14 +121,10 @@ void addChar()
 */
 void getChar()
 {
-   if (getString() >= 0)
+   if ((nextChar = getString()) != EOF)
    {
-      nextChar = input[num];
       if (isalpha(nextChar))
-      {
          charClass = LETTER;
-         peek = input[num + 1];
-      }
       else if (isdigit(nextChar))
          charClass = DIGIT;
       else if (nextChar == '\n')
@@ -149,21 +145,18 @@ void getChar()
    input - puts the whole input into a string
    charClass - the category of the character - LETTER, DiGIT, OPERATOR
 */
-int getString()
+char getString()
 {
    if (num + 1 < input.length())
-   {
       num++;
-      return num;
-   }
    else
    {
       string line;
       if (getline(cin, line))
          input += line + '\n';
       num++;
-      return num;
    }
+   return input[num];
 }
 
 /*****************************************************/
@@ -174,9 +167,10 @@ int getString()
 */
 void getNonBlank()
 {
-   //input.erase(remove(input.begin(), input.end(), ' '), input.end());
-   while (nextChar == ' ')
+   while (nextChar != '\n' && isspace(nextChar))
+   {
       getChar();
+   }
 }
 
 /*****************************************************/
@@ -189,9 +183,7 @@ int lex()
    getNonBlank();
    switch (charClass)
    {
-
    case NEWLINE:
-      //cout << "--NEWLINE FOUND--" << endl;
       break;
 
    case COMMENT:

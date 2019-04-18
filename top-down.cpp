@@ -32,7 +32,7 @@ int stmt()
    Symbol_ptr identifier;
    VALUE var;
    /*handles identifiers*/
-   if (nextToken == IDENT && peek == '=')
+   if (nextToken == IDENT)
    {
       table.insert(lexeme);
       identifier = table.lookup(lexeme);
@@ -44,42 +44,85 @@ int stmt()
          var.ivalue = expr();
          identifier->putval(var);
       }
-      /* handles getting value of variable */
-      else
-      {
-         var.ivalue = identifier->getval().ivalue;
-      }
    }
    /* handles if */
    else if (nextToken == IF_STMT)
    {
       /* declare local variables */
       bool condition;
-      int statement;
-      int option;
+      int statement, option;
 
+      lex();
       condition = cond();
-
-      // cout << "nextToken: " << nextToken << endl;
-      // cout << "lexeme:" << lexeme << endl;
 
       if (condition && nextToken == THEN_STMT)
       {
          lex();
-         statement = stmts();
+         while (nextToken == IDENT)
+         {
+            statement = stmts();
+
+            if (nextToken == ELSE_STMT)
+               while (nextToken != FI_STMT)
+                  lex();
+         }
       }
       else if (condition == false)
       {
-         lex();
+         while (nextToken != ELSE_STMT)
+            lex();
+
          option = optelse();
-         cout << "option: " << option << endl;
       }
       else
       {
          cout << "ERROR! INCORRECT IF FORMAT!" << endl;
       }
-      //cout << condition << endl;
+
+      return statement;
    }
+
+   /* handles while */
+   else if (nextToken == WHILE_STMT)
+   {
+      /* declare local variables */
+      bool condition;
+      int statement;
+
+      int begin_index = num;
+      lex();
+      condition = cond();
+
+      int run = 0;
+
+      while (condition)
+      {
+         run++;
+         if (nextToken == DO_STMT)
+         {
+            lex();
+            while (nextToken != IDENT)
+            {
+               lex();
+            }
+            while (nextToken == IDENT || nextToken == PRINT || nextToken == DUMP)
+            {
+               statement = stmts();
+            }
+            if (nextToken == DONE_STMT)
+            {
+               num = begin_index;
+               getChar();
+               lex();
+               condition = cond();
+            }
+         }
+         while (!condition && nextToken != DONE_STMT)
+            lex();
+      }
+      return statement;
+   }
+
    else if (nextToken == PRINT)
    {
       lex();
@@ -108,7 +151,6 @@ int stmt()
    else
    {
       var.ivalue = expr();
-      // cout << "\t= " << var.ivalue << endl;
    }
    return var.ivalue;
 }
@@ -122,7 +164,6 @@ bool cond()
    /* declare local variables */
    int expr1, expr2;
 
-   lex();
    /* Parse the first term */
    expr1 = expr();
    while (nextToken == EQ_OP ||
@@ -198,20 +239,17 @@ bool cond()
 int optelse()
 {
    int statement;
-   cout << "lexeme:" << lexeme << endl;
    if (nextToken == ELSE_STMT)
    {
       lex();
-      statement = stmts();
-      cout << "lexeme:" << lexeme << endl;
-      if (nextToken == FI_STMT)
+      while (nextToken == IDENT)
       {
-         return statement;
+         statement = stmts();
       }
+      return statement;
    }
    else if (nextToken == FI_STMT)
    {
-      cout << "lexeme:" << lexeme << endl;
       return nextToken;
    }
    else
@@ -372,7 +410,9 @@ int factor()
    {
       /* It was not an id, an integer literal, or a left
        parenthesis */
-      error("expected an id, integer, or a left paren");
+      cerr << "Error at character " << input[num] << ": expected an id, integer, or a left paren" << endl;
+      cout << "nextTokenERR:" << nextToken << endl;
+      cout << "lexemeERR:" << lexeme << endl;
    } /* End of else */
    return var.ivalue;
 } /* End of function factor */

@@ -29,7 +29,7 @@ extern int num;
 
 /* Function declarations */
 
-int getString();
+char getString();
 void addChar();
 void getChar();
 void getNonBlank();
